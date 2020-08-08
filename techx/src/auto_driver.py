@@ -14,7 +14,7 @@ def get_range(data, angle, deg=True):
     angle = angle + np.pi
     if angle > np.pi:
         angle -= np.pi * 2
-    dis = data.ranges[(angle - data.angle_min) // data.angle_increment]
+    dis = data.ranges[int((angle - data.angle_min) / data.angle_increment)]
     if dis < data.range_min or dis > data.range_max:
         dis = FILLER_VALUE
     return dis
@@ -43,17 +43,17 @@ def wall_following_callback(data):
     error = TARGET_DIS - projected_dis
     steering_angle = P * error
 
-    front_dis = data.ranges[rad2index(0)]
+    front_dis = get_range(data, 0)
     speed = 0.5
     angle_filter = steering_angle
     drive_msg = AckermannDrive(steering_angle=steering_angle, speed=speed)
-    print(f"angle {np.rad2deg(steering_angle):2.1f}")
+    # print(f"angle {np.rad2deg(steering_angle):2.1f}")
     drive_pub.publish(drive_msg)
 
 
 rospy.init_node("techx")
 
-scan_sub = rospy.Subscriber('/scan', LaserScan, callback)
+scan_sub = rospy.Subscriber('/scan', LaserScan, wall_following_callback)
 
 drive_pub = rospy.Publisher('/tianracer/ackermann_cmd', AckermannDrive, queue_size=1)
 
