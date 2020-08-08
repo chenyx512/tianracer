@@ -47,7 +47,7 @@ def wall_following_callback(data):
     speed = 0.5
     angle_filter = steering_angle
     drive_msg = AckermannDrive(steering_angle=steering_angle, speed=speed)
-    # print(f"angle {np.rad2deg(steering_angle):2.1f}")
+    print(f"angle {np.rad2deg(steering_angle):2.1f}")
     drive_pub.publish(drive_msg)
 
 
