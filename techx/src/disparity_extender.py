@@ -4,7 +4,19 @@ import rospy
 import math
 import numpy as np
 from sensor_msgs.msg import LaserScan
+from nav_msgs.msg import Odometry
 from ackermann_msgs.msg import AckermannDrive, AckermannDriveStamped
+
+
+def _get_yaw(data):
+    w = data.w
+    x = -data.z
+    y = data.x
+    z = -data.y
+
+    yaw = -math.atan2(2.0 * (w * x + y * z), w * w - x * x - y * y + z * z)
+
+    return yaw
 
 
 FILLER_VALUE = 4.0
@@ -21,16 +33,26 @@ def get_range(data, angle, deg=True):
     return dis
 
 
+target_x = np.nan
+target_y = np.nan
+cur_x = np.nan
+cur_y = np.nan
+cur_theta = np.nan
+
+DISPARITY_DIF = 0.3
+CAR_WIDTH = 0.3
+angle_P = 1 / 30 * 0.41
+speed_P = 1 / 3.0
+MIN_SPEED = 0.7
+MAX_SPEED = 2
+
+
 def disparity_extender_callback(data):
     """
     Implements disparity extender at
     https://www.nathanotterness.com/2019/04/the-disparity-extender-algorithm-and.html
     """
-    DISPARITY_DIF = 0.3
-    CAR_WIDTH = 0.5
-    angle_P = 1 / 40 * 0.41
-    speed_P = 1 / 2.0 
-
+    global cur_x, cur_y, cur_theta, target_x, target_y
     dis = []
     for angle in range(-90, 91):
         dis.append(get_range(data, angle))
@@ -60,22 +82,44 @@ def disparity_extender_callback(data):
     max_index = np.argmax(dis)
     max_dis = dis[max_index]
     target_angle = max_index - 90
-    steering_angle = target_angle * angle_P
+    if not np.isnan(cur_x) and not np.isnan(cur_theta) and not np.isnan(cur_theta):
+        target_x = cur_x + np.cos(math.radians(target_angle) + cur_theta) * max_dis
+        target_y = cur_y + np.sin(math.radians(target_angle) + cur_theta) * max_dis
 
-    speed = get_range(data, 0) * speed_P
-    if speed > 2: speed = 2
-    if speed < 0.75: speed = 0.75
-    print(f"target_angle {target_angle} speed {speed:1.1f} "
-          f"steering_angle {math.degrees(steering_angle):3.1f}")
+
+def odom_callback(data):
+    global cur_x, cur_y, cur_theta, target_x, target_y
+    speed = 0
+    steering_angle = 0
+    position = data.pose.pose.position #now Pose
+    cur_x = position.x
+    cur_y = position.y
+
+    orientation = data.pose.pose.orientation
+    cur_theta = _get_yaw(orientation)
+
+    if not np.isnan(target_x) and not np.isnan(target_y):
+        target_theta = math.atan2(target_y - cur_y, target_x - cur_x)
+        err_theta = target_theta - cur_theta
+        if err_theta > np.pi:
+            err_theta -=  np.pi
+        elif err_theta < -np.pi:
+            err_theta += np.pi
+        steering_angle = math.degrees(err_theta) * angle_P
+        speed = np.hypot(target_y - cur_y, target_x - cur_x) * speed_P
+        speed = np.clip(speed, MIN_SPEED, MAX_SPEED)
+        rospy.loginfo_throttle(1.0,
+            f"target_angle {math.degrees(err_theta)} speed {speed:1.1f} "
+            f"steering_angle {math.degrees(steering_angle):3.1f}")
 
     drive_msg = AckermannDrive(steering_angle=steering_angle, speed=speed)
-    # print(f"angle {np.rad2deg(steering_angle):2.1f}")
     drive_pub.publish(drive_msg)
 
 
 rospy.init_node("techx")
 
 scan_sub = rospy.Subscriber('/scan', LaserScan, disparity_extender_callback)
+odom_sub = rospy.Subscriber('/odometry/filtered', Odometry, odom_callback)
 
 drive_pub = rospy.Publisher('/tianracer/ackermann_cmd', AckermannDrive, queue_size=1)
 

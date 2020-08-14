@@ -37,7 +37,7 @@ def wall_following_callback(data):
     b = get_range(data, -90)
     a = get_range(data, -90 + THETA)
     # print(f"a{a:1.1f} b{b:1.1f}")
-    alpha = np.arctan((a * np.cos(THETA)) - b / (a * np.sin(THETA)))
+    alpha = np.arctan((a * np.cos(THETA) - b) / (a * np.sin(THETA)))
     AB = b * np.cos(alpha)
     projected_dis = AB + LOOK_AHEAD_DIS * np.sin(alpha)
     error = TARGET_DIS - projected_dis

@@ -11,6 +11,4 @@
     <include file="$(find tianracer_bringup)/launch/bridge.launch" />
 
     <node pkg="techx" type="disparity_extender.py" name="techx_auto_driver" output="screen"/>
-
-    <include file="$(find tianracer_slam)/launch/tianracer_gmapping.launch"/>
 </launch>
