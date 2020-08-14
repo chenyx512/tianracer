@@ -17,7 +17,7 @@
     <arg name="init_a" default="0.0" />
 
     <!-- Map server -->
-    <arg name="map_file" default="$(find tianracer_slam)/maps/tianbot_office.yaml" />
+    <arg name="map_file" default="/home/tianbot/techx307.yaml" />
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
     <!-- Localization -->
@@ -51,7 +51,7 @@
     <node pkg="tianracer_navigation" type="cmd_vel_to_ackermann_drive.py" name="vel_to_ackermann" >
         <param name="twist_cmd_topic" value="/cmd_vel" />
 	<param name="ackermann_cmd_topic" value="/tianracer/ackermann_cmd" />
-        <param name="wheelbase" value="0.4" />
+        <param name="wheelbase" value="0.3" />
     </node>    
     
     <!--  Visualisation -->

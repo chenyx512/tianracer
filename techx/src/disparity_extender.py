@@ -28,8 +28,8 @@ def disparity_extender_callback(data):
     """
     DISPARITY_DIF = 0.3
     CAR_WIDTH = 0.5
-    angle_P = 1 / 30 * 0.41
-    speed_P = 1 / 12 * 7
+    angle_P = 1 / 40 * 0.41
+    speed_P = 1 / 2.0 
 
     dis = []
     for angle in range(-90, 91):
@@ -43,7 +43,7 @@ def disparity_extender_callback(data):
             min_dis = min(dis[i], dis[i + 1])
             angle_range = math.ceil(
                 math.degrees(math.atan(CAR_WIDTH / 2 / min_dis)))
-            angle_range += 6
+            angle_range += 3
 
             side_range = range(i - angle_range + 1, i + 1) if dis[
                                                                   i + 1] == min_dis \
@@ -64,7 +64,7 @@ def disparity_extender_callback(data):
 
     speed = get_range(data, 0) * speed_P
     if speed > 2: speed = 2
-    if speed < 0.5: speed = 0.5
+    if speed < 0.75: speed = 0.75
     print(f"target_angle {target_angle} speed {speed:1.1f} "
           f"steering_angle {math.degrees(steering_angle):3.1f}")
 

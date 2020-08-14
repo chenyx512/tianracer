@@ -6,8 +6,8 @@
     <!-- move base -->
     <node pkg="tianracer_navigation" type="multi_goals.py" respawn="false" name="multi_goals" output="screen">
         <!-- params for move_base -->
-        <param name="goalListX" value="[2.0, 1.0]" />
-        <param name="goalListY" value="[2.0, 3.0]" />
+        <param name="goalListX" value="[1.6, 0.0]" />
+        <param name="goalListY" value="[-1.0, 0.0]" />
         <param name="map_frame" value="map" />
     </node>
     
